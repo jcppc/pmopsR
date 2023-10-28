@@ -1,2 +1,2 @@
 # pmopsR
-R package to support multiple functions of process analysis, mining, simulation and prediction tasks
+R package to support multiple functions for process analysis, mining, simulation and prediction tasks
