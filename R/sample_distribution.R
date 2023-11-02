@@ -21,6 +21,7 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
     ggplot2::geom_histogram(binwidth=nrow(sample.dataset)/(nrow(sample.dataset)*.3),fill='lightblue') +
     ggplot2::ggtitle("Histogram (Frequency)") + labs(y="") + ggplot2::theme_minimal()
 
+
   dist.chart <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X,y=ggplot2::after_stat(density))) +
     ggplot2::geom_density(fill='lightblue') + ggplot2::ggtitle("Histogram (Density)") + labs(y="") + ggplot2::theme_minimal()
 
