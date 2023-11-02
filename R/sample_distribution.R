@@ -46,7 +46,8 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -69,7 +70,8 @@ normal_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -90,7 +92,8 @@ exponential_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -110,7 +113,8 @@ chi_square_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -131,7 +135,8 @@ logistic_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -152,7 +157,8 @@ poisson_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param n
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -174,8 +180,9 @@ t_student_distribution <- function( n=1000, output ) {
 
 #' Title
 #'
-#' @param dist.list
-#' @param n
+#' @param dist.list List of distributions to simulate
+#' @param n N Observations
+#' @param output Path to store plots
 #'
 #' @return
 #' @export
@@ -191,7 +198,7 @@ sample_distribution <- function(dist.list=c("normal"), n=1000, output="/Users/jo
   if ("chi-square" %in% dist.list) pmopsR::chi_square_distribution(n, output)
   if ("logistic" %in% dist.list) pmopsR::logistic_distribution(n, output)
   if ("poisson" %in% dist.list) pmopsR::poisson_distribution(n, output)
-  if ("t-student" %in% dist.list) pmopsR::tstudent_distribution(n, output)
+  if ("t-student" %in% dist.list) pmopsR::t_student_distribution(n, output)
 
 }
 
