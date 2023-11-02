@@ -18,7 +18,7 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
   dist.table <- gridExtra::tableGrob(dist.stats, rows = NULL) #formattable::formattable(dist.stats)
 
   dist.hist <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X)) +
-    ggplot2::geom_histogram(binwidth=n/(n*.3),fill='lightblue') +
+    ggplot2::geom_histogram(binwidth=nrow(sample.dataset)/(nrow(sample.dataset)*.3),fill='lightblue') +
     ggplot2::ggtitle("Histogram (Frequency)") + labs(y="") + ggplot2::theme_minimal()
 
   dist.chart <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X,y=ggplot2::after_stat(density))) +
