@@ -34,12 +34,12 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
 
   #plots <-  (dist.hist + dist.chart) / (dist.violin + dist.density)
 
-  grDevices::pdf(paste0(output, "/", gsub(" ", "_",dist.stats$Variable),".pdf"), width = 12.5, height = 7)
+  #grDevices::pdf(paste0(output, "/", gsub(" ", "_",dist.stats$Variable),".pdf"), width = 12.5, height = 7)
 
   p <- gridExtra::grid.arrange(dist.table, dist.hist, dist.chart, dist.violin , dist.density, nrow = 3,
                           layout_matrix = rbind(c(1), c(2,3), c(4,5) ))
-  p
-  grDevices::dev.off()
+  #p
+  #grDevices::dev.off()
 
   return (p)
 
