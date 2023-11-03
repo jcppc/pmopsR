@@ -16,7 +16,7 @@ summary.ext <- function(kpi, name) {
 
 plot.distribution <- function(sample.dataset, dist.stats, output) {
 
-  dist.table <- gridExtra::tableGrob(dist.stats, theme=gridExtra::ttheme_default(base_size = 10), rows = NULL)
+  dist.table <- gridExtra::tableGrob(dist.stats, theme=gridExtra::ttheme_default(base_size = 8), rows = NULL)
 
   dist.hist <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X)) +
     ggplot2::geom_histogram(binwidth=nrow(sample.dataset)/(nrow(sample.dataset)*.3),fill='lightblue') +
