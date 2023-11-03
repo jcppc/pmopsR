@@ -7,15 +7,16 @@ summary.ext <- function(kpi, name) {
   temp <- data.frame(t(data.frame( unclass(summary(as.numeric(kpi))), check.names = FALSE, stringsAsFactors = FALSE)))
   colnames(temp) <- c("Min","Pct25","Median","Mean","Pct75","Max")
   row.names(temp) <- NULL
+  df <-  data.frame(Variable=kpiname, N=length(as.numeric(kpi)), temp, StD=stats::sd(as.numeric(kpi)), Var=stats::var(as.numeric(kpi)), Skewness=moments::skewness(as.numeric(kpi)) , Kurtosis=moments::kurtosis(as.numeric(kpi)) )
+  df <-  rapply(object = df, f = round, classes = "numeric", how = "replace", digits = 3)
 
-  return(data.frame(Variable=kpiname, N=length(as.numeric(kpi)), temp, StD=stats::sd(as.numeric(kpi)), Var=stats::var(as.numeric(kpi)), Skewness=moments::skewness(as.numeric(kpi)) , Kurtosis=moments::kurtosis(as.numeric(kpi)) ))
-
+  return(df)
 }
 
 
 plot.distribution <- function(sample.dataset, dist.stats, output) {
 
-  dist.table <- gridExtra::tableGrob(dist.stats, rows = NULL) #formattable::formattable(dist.stats)
+  dist.table <- gridExtra::tableGrob(dist.stats, theme=gridExtra::ttheme_default(base_size = 10), rows = NULL)
 
   dist.hist <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X)) +
     ggplot2::geom_histogram(binwidth=nrow(sample.dataset)/(nrow(sample.dataset)*.3),fill='lightblue') +
@@ -37,7 +38,7 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
   #grDevices::pdf(paste0(output, "/", gsub(" ", "_",dist.stats$Variable),".pdf"), width = 12.5, height = 7)
 
   p <- gridExtra::grid.arrange(dist.table, dist.hist, dist.chart, dist.violin , dist.density, nrow = 3,
-                          layout_matrix = rbind(c(1), c(2,3), c(4,5) ))
+                               layout_matrix = rbind(c(1), c(2,3), c(4,5) ))
   #p
   #grDevices::dev.off()
 
