@@ -41,6 +41,8 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
   p
   grDevices::dev.off()
 
+  return (p)
+
 }
 
 
