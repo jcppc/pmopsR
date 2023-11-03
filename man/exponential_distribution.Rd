@@ -4,7 +4,7 @@
 \alias{exponential_distribution}
 \title{Title}
 \usage{
-exponential_distribution(n = 1000, output)
+exponential_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}

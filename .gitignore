@@ -3,6 +3,5 @@
 .RData
 .Ruserdata
 .DS_Store
-EvaluateGroups.Rmd
-MineDistributions.Rmd
 renv.lock
+/R/temp/

@@ -4,7 +4,7 @@
 \alias{logistic_distribution}
 \title{Title}
 \usage{
-logistic_distribution(n = 1000, output)
+logistic_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}

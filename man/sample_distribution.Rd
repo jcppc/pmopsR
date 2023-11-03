@@ -4,11 +4,7 @@
 \alias{sample_distribution}
 \title{Title}
 \usage{
-sample_distribution(
-  dist.list = c("normal"),
-  n = 1000,
-  output = "/Users/joaocaldeira/Desktop"
-)
+sample_distribution(dist.list = c("normal"), n = 1000, output = ".")
 }
 \arguments{
 \item{dist.list}{List of distributions to simulate}

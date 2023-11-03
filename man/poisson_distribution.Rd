@@ -4,7 +4,7 @@
 \alias{poisson_distribution}
 \title{Title}
 \usage{
-poisson_distribution(n = 1000, output)
+poisson_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}

@@ -4,7 +4,7 @@
 \alias{normal_distribution}
 \title{Title}
 \usage{
-normal_distribution(n = 1000, output)
+normal_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}

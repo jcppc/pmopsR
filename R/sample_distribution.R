@@ -19,18 +19,18 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
 
   dist.hist <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X)) +
     ggplot2::geom_histogram(binwidth=nrow(sample.dataset)/(nrow(sample.dataset)*.3),fill='lightblue') +
-    ggplot2::ggtitle("Histogram (Frequency)") + labs(y="") + ggplot2::theme_minimal()
+    ggplot2::ggtitle("Histogram (Frequency)") + ggplot2::labs(y="") + ggplot2::theme_minimal()
 
 
   dist.chart <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X,y=ggplot2::after_stat(density))) +
-    ggplot2::geom_density(fill='lightblue') + ggplot2::ggtitle("Histogram (Density)") + labs(y="") + ggplot2::theme_minimal()
+    ggplot2::geom_density(fill='lightblue') + ggplot2::ggtitle("Histogram (Density)") + ggplot2::labs(y="") + ggplot2::theme_minimal()
 
   dist.density <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x=X)) + ggplot2::stat_ecdf(geom = "step", linewidth = 0.5, color=palette[1]) +
-    ggplot2::ggtitle("Cumulative Density Function") + labs(y="") + ggplot2::theme_minimal()
+    ggplot2::ggtitle("Cumulative Density Function") + ggplot2::labs(y="") + ggplot2::theme_minimal()
 
   dist.violin <- ggplot2::ggplot(sample.dataset, ggplot2::aes(x="",y=X)) + ggplot2::geom_violin(trim = FALSE, fill="lightblue") +
-    ggplot2::geom_boxplot(width=0.3)  + ggplot2::stat_summary(fun=median, geom="point", size=2, color="black") +
-    ggplot2::ggtitle("Box/Violin Plot") +  labs(y="",x="X") + theme_minimal()
+    ggplot2::geom_boxplot(width=0.3)  + ggplot2::stat_summary(fun=stats::median, geom="point", size=2, color="black") +
+    ggplot2::ggtitle("Box/Violin Plot") +  ggplot2::labs(y="",x="X") + ggplot2::theme_minimal()
 
   #plots <-  (dist.hist + dist.chart) / (dist.violin + dist.density)
 
@@ -39,7 +39,7 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
   p <- gridExtra::grid.arrange(dist.table, dist.hist, dist.chart, dist.violin , dist.density, nrow = 3,
                           layout_matrix = rbind(c(1), c(2,3), c(4,5) ))
   p
-  dev.off()
+  grDevices::dev.off()
 
 }
 
@@ -54,7 +54,7 @@ plot.distribution <- function(sample.dataset, dist.stats, output) {
 #' @export
 #'
 #' @examples
-normal_distribution <- function( n=1000, output ) {
+normal_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the Normal Distribution")
@@ -78,7 +78,7 @@ normal_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-exponential_distribution <- function( n=1000, output ) {
+exponential_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the Exponential Distribution")
@@ -100,7 +100,7 @@ exponential_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-chi_square_distribution <- function( n=1000, output ) {
+chi_square_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the Chi-square Distribution")
@@ -121,7 +121,7 @@ chi_square_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-logistic_distribution <- function( n=1000, output ) {
+logistic_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the Logistic Distribution")
@@ -143,7 +143,7 @@ logistic_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-poisson_distribution <- function( n=1000, output ) {
+poisson_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the Poisson Distribution")
@@ -165,7 +165,7 @@ poisson_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-t_student_distribution <- function( n=1000, output ) {
+t_student_distribution <- function( n=1000, output = "." ) {
 
   #base::set.seed(1000)
   #base::print("Hello, world!. This is the t-student Distribution")
@@ -189,7 +189,7 @@ t_student_distribution <- function( n=1000, output ) {
 #' @export
 #'
 #' @examples
-sample_distribution <- function(dist.list=c("normal"), n=1000, output="/Users/joaocaldeira/Desktop") {
+sample_distribution <- function(dist.list=c("normal"), n=1000, output=".") {
 
   message("\nValid options for distributions are: normal, exponential, chi-square, logistic, poisson, t-student.")
   message("More options are being developed.\n")
@@ -202,11 +202,3 @@ sample_distribution <- function(dist.list=c("normal"), n=1000, output="/Users/jo
   if ("t-student" %in% dist.list) pmopsR::t_student_distribution(n, output)
 
 }
-
-
-#library(reactablefmtr)
-#reactable(rexp( 1000 , rate = 1),defaultColDef = colDef(cell = data_bars(df, box_shadow = TRUE, round_edges = TRUE,
-#                                                                         text_position = "outside-base",
-#                                                                         fill_color = c("#e81cff", "#40c9ff"),
-#                                                                         background = "#e5e5e5",fill_gradient = TRUE)))
-

@@ -4,7 +4,7 @@
 \alias{chi_square_distribution}
 \title{Title}
 \usage{
-chi_square_distribution(n = 1000, output)
+chi_square_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}

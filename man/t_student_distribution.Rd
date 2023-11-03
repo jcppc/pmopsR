@@ -4,7 +4,7 @@
 \alias{t_student_distribution}
 \title{Title}
 \usage{
-t_student_distribution(n = 1000, output)
+t_student_distribution(n = 1000, output = ".")
 }
 \arguments{
 \item{n}{N Observations}
