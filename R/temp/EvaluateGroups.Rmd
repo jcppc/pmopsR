@@ -1,0 +1,180 @@
+---
+title: "`r params$doctitle`"
+params:
+  doctitle: "Process Modeling and Deployment"
+author: 
+- João Caldeira, [jcppc@iscte-iul.pt](mailto:jcppc@iscte-iul.pt), ISCTE-IUL^[Invited Assistant Professor. https://ciencia.iscte-iul.pt/authors/joao-caldeira/cv]
+#^[LinkedIn. https://www.linkedin.com/in/joao-carlos-caldeira/]
+- Fernando Brito e Abreu, [fba@iscte-iul.pt](mailto:fba@iscte-iul.pt), ISCTE-IUL^[Associate Professor. https://ciencia.iscte-iul.pt/authors/fernando-brito-e-abreu/] 
+# name: João Caldeira^[Invited Professor. https://www.linkedin.com/in/joao-carlos-caldeira/]
+# email: jcppc@iscte-iul.pt
+# affiliation: ISCTE-IUL
+date: "`r format(Sys.time(), '%d %B %Y')`"
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{\includegraphics[width=3cm]{iscte.png}}
+- \fancyfoot[L]{Copyright @ `r format(Sys.time(), '%Y')` Department of Information Science and Technology}
+- \fancyfoot[C]{}
+- \fancyfoot[R]{\thepage}
+#abstract: This is the abstract.
+output:
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    highlight: espresso
+    theme: spacelab
+  html_document: 
+    toc: yes
+    toc_float: yes
+    highlight: espresso
+    theme: spacelab
+  pdf_document: 
+    toc: yes
+    fig_caption: yes
+    number_sections: yes
+    highlight: espresso
+  word_document:
+    toc: yes
+    toc_depth: '3'
+subtitle: Process Data Analysis - Insights/Inputs for Optimized Process Simulation
+tags:
+- process modeling
+- process simulation
+- distribution assessment
+---
+
+\newpage
+
+
+
+```{r, eval=TRUE, echo=FALSE}
+library(readxl)
+library(data.table)
+library(vtable)
+library(openxlsx)
+```
+
+# Evaluation Sheet
+```{r, eval=TRUE, echo=FALSE}
+summary.ext <- function(kpi, name) {
+  
+  library(moments)
+  
+  if ( missing(name) ) { kpiname <- deparse(substitute(kpi)) } else { kpiname <- name }
+  
+  temp <- data.frame(t(data.frame( unclass(summary(as.numeric(kpi))), check.names = FALSE, stringsAsFactors = FALSE)))
+  colnames(temp) <- c("Min","Pct25","Median","Mean","Pct75","Max")
+  row.names(temp) <- NULL
+ 
+  return(data.frame(Variable=kpiname, N=length(as.numeric(kpi)), temp, StD=sd(as.numeric(kpi)), Var=var(as.numeric(kpi)), Skew=skewness(as.numeric(kpi)) , Kurt=kurtosis(as.numeric(kpi)) ))
+  
+}
+
+```
+
+
+## Groups Statistics
+```{r, eval=TRUE, echo=FALSE}
+options(scipen = 999)
+groups <- c("G2","G3","G4","G5","G6","G7","G8","G9","G10","G11","G12","G14","G15","G16","G17","G18","G19","G20","G22","G23","G25")
+results <- data.frame(Group="", Variable="", Min=as.numeric(""), 
+                      FirstQ=as.numeric(""), Median=as.numeric(""), 
+                      Mean=as.numeric(""), ThirdQ=as.numeric(""), 
+                      Max=as.numeric(""), StD=as.numeric(""), Var=as.numeric(""))
+
+activities.duration <- NULL
+activities.duration <- data.frame(Group="", Variable="", N=as.numeric(0), Mean=as.numeric(0), "Std. Dev."=as.numeric(0), Min=as.numeric(0), 
+                      'Pctl. 25'=as.numeric(0), 'Pctl. 75'=as.numeric(0), Max=as.numeric(0), Var=as.numeric(0), check.names = FALSE)
+
+
+for(i in 1:length(groups)) {
+  #cat("\n\nGROUP : ",groups[i], "\n")
+  #group <- "G2"
+  
+  dataset <- read_excel(paste0("C:/Exercises/Logs/",groups[i],".xlsx"))
+  
+  colnames(dataset)[which(names(dataset) == "Start Timestamp")] <- "Start Time"
+  colnames(dataset)[which(names(dataset) == "Complete Timestamp")] <- "End Time"
+  
+  dataset[['Start Time']] <- as.POSIXct(dataset$`Start Time`, format = "%Y-%m-%d %H:%M:%S")
+  dataset[['End Time']] <- as.POSIXct(dataset$`End Time`, format = "%Y-%m-%d %H:%M:%S")
+  
+  filtered <- dataset[!duplicated(dataset$`Case ID`),] 
+  ordered <- filtered[order(as.POSIXct(filtered$`Start Time`), decreasing = FALSE),]
+  
+  ordered <- data.table(ordered)
+  instances <- ordered[, Interval := difftime(as.POSIXct(ordered$`Start Time`), shift(as.POSIXct(ordered$`Start Time`), fill=ordered$`Start Time`[1L]), units="mins")]
+  instances <- instances[-c(1),]
+  #instances
+  #cat("Min. 1st Qu. Median Mean 3rd Qu. Max.\n")
+  #cat(summary(as.numeric(instances$Interval)))
+  tempInt <- as.data.frame(t(data.frame(unclass(summary(as.numeric(instances$Interval))), check.names = FALSE, stringsAsFactors = FALSE)))
+  tempInt[['StD']] <- sd(as.numeric(instances$Interval))
+  tempInt[['Var']] <- var(as.numeric(instances$Interval))
+  colnames(tempInt) <- c("Min","FirstQ","Median","Mean","ThirdQ","Max", "StD","Var")
+  sumInterval <- as.data.frame(cbind(data.frame(Group=groups[i], Variable="Interval"), tempInt ))
+  results <- rbind(results, sumInterval)
+  
+
+  dataset[['Elapsed Time']] <- as.difftime(difftime(dataset[['End Time']], dataset[['Start Time']], units="mins"))
+  datasetActivities <- dataset
+  datasetActivities[,-c(1)][datasetActivities[,-c(1)]==0] <- NA
+  datasetActivities <- datasetActivities[complete.cases(datasetActivities),]
+  #datasetActivities
+  #cat("\nMin. 1st Qu. Median Mean 3rd Qu. Max.\n")
+  #cat(summary(as.numeric(datasetActivities$`Elapsed Time`)))
+  
+  tempElapsed <- as.data.frame(t(data.frame(unclass(summary(as.numeric(datasetActivities$`Elapsed Time`))), check.names = FALSE, stringsAsFactors = FALSE)))
+  tempElapsed[['StD']] <- sd(as.numeric(datasetActivities$`Elapsed Time`))
+  tempElapsed[['Var']] <- var(as.numeric(datasetActivities$`Elapsed Time`))
+  colnames(tempElapsed) <- c("Min","FirstQ","Median","Mean","ThirdQ","Max", "StD","Var")
+  sumElapsed <- cbind(data.frame(Group=groups[i], Variable="Elapsed"), tempElapsed )
+  
+  results <- rbind(results, sumElapsed)
+  
+  activitiesTemp <- st(dataset, group = "Activity", vars=c("Elapsed Time"), group.long= TRUE, out = "return")
+  activitiesTemp$Var <- as.numeric(activitiesTemp$`Std. Dev.`)^2
+  activitiesTemp <- cbind("Group"=groups[i], activitiesTemp)
+  activities.duration <- rbind(activities.duration, activitiesTemp)
+  activitiesTemp <- NULL
+
+}
+
+activities.duration <- activities.duration[-1,c(1,2,3,6,7,4,8,9,5,10)]
+activities.duration[is.na(activities.duration)] <- ""
+
+results <- results[-1,]
+row.names(results) <- 1 : nrow(results)
+```
+
+
+
+```{r, eval=TRUE, echo=FALSE}
+results
+#write.xlsx(results, "C:/Exercises/Results.xlsx")
+```
+
+
+
+
+```{r, eval=TRUE, echo=FALSE}
+activities.duration
+write.xlsx(activities.duration, "C:/Exercises/Activities.xlsx")
+```
+
+
+
+
+
+
+```{r, eval=FALSE, echo=FALSE}
+summary.ext(instances$Interval)
+```
+
+
+```{r, eval=FALSE, echo=FALSE}
+summary.ext(datasetActivities$`Elapsed Time`)
+```

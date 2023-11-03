@@ -1,0 +1,425 @@
+---
+title: "`r params$doctitle`"
+params:
+  doctitle: "Process Modeling and Deployment"
+author: 
+- João Caldeira, [jcppc@iscte-iul.pt](mailto:jcppc@iscte-iul.pt), ISCTE-IUL^[Invited Assistant Professor. https://ciencia.iscte-iul.pt/authors/joao-caldeira/cv]
+#^[LinkedIn. https://www.linkedin.com/in/joao-carlos-caldeira/]
+- Fernando Brito e Abreu, [fba@iscte-iul.pt](mailto:fba@iscte-iul.pt), ISCTE-IUL^[Associate Professor. https://ciencia.iscte-iul.pt/authors/fernando-brito-e-abreu/] 
+# name: João Caldeira^[Invited Professor. https://www.linkedin.com/in/joao-carlos-caldeira/]
+# email: jcppc@iscte-iul.pt
+# affiliation: ISCTE-IUL
+date: "`r format(Sys.time(), '%d %B %Y')`"
+header-includes:
+- \usepackage{fancyhdr}
+- \pagestyle{fancy}
+- \fancyhead[L]{\includegraphics[width=3cm]{iscte.png}}
+- \fancyfoot[L]{Copyright @ `r format(Sys.time(), '%Y')` Department of Information Science and Technology}
+- \fancyfoot[C]{}
+- \fancyfoot[R]{\thepage}
+#abstract: This is the abstract.
+output:
+  html_document: 
+    toc: yes
+    toc_float: yes
+    highlight: espresso
+    theme: spacelab
+  html_notebook: 
+    toc: yes
+    toc_float: yes
+    number_sections: yes
+    fig_caption: yes
+    highlight: espresso
+    theme: spacelab
+  pdf_document: 
+    toc: yes
+    fig_caption: yes
+    number_sections: yes
+    highlight: espresso
+  word_document:
+    toc: yes
+    toc_depth: '3'
+subtitle: Process Data Analysis - Insights/Inputs for Optimized Process Simulation
+tags:
+- process modeling
+- process simulation
+- distribution assessment
+---
+
+\newpage
+
+# Environment Setup
+
+## Install R
+
+Install **R** from here: <https://cran.r-project.org/>.
+
+## Install R Studio Desktop
+
+Install **R Studio Desktop** from here: <https://www.rstudio.com/products/rstudio/download/#download>.
+
+## Install Required Libraries
+
+```{r, eval=FALSE, echo=TRUE}
+install.packages("xfun")
+install.packages("formatR")
+install.packages("readxl")
+install.packages("fitdistrplus")
+install.packages("stats")
+install.packages("actuar")
+install.packages("vtable")
+install.packages("data.table")
+install.packages("dplyr")
+install.packages("vioplot")
+install.packages("bupaR")
+install.packages("processanimateR")
+```
+
+## Load Required Libraries
+
+```{r, warning=FALSE,message=FALSE,echo=TRUE}
+library(xfun)
+library(formatR)
+library(readxl)
+library(fitdistrplus)
+library(stats)
+library(actuar)
+library(vtable)
+library(data.table)
+library(dplyr)
+library(vioplot)
+library(bupaR)
+library(processanimateR)
+```
+
+```{r echo=FALSE}
+options(scipen = 999)
+palette <- c("#14bfdd", "#80b3d2", "#040404", "#d7d9ce")
+```
+
+\newpage
+
+# Dataset Preparation
+
+## Loading the Dataset
+
+This **filename** should match your data location. The log file should have at least the columns named **Case ID**, **Activity**, **Start Time**, **End Time**.
+
+```{r}
+#dataset <- read.csv("C:/Exercises/G2.csv")
+dataset <- read.csv("C:/Works/RP.csv", header = TRUE, sep = ";", dec = ",")
+
+colnames(dataset)[which(names(dataset) == "case_id")] <- "Case ID"
+#colnames(dataset)[which(names(dataset) == "event")] <- "Activity"
+#colnames(dataset)[which(names(dataset) == "resource")] <- "Resource"
+colnames(dataset)[which(names(dataset) == "start_time")] <- "Start Time"
+colnames(dataset)[which(names(dataset) == "end_time")] <- "End Time"
+```
+
+## Formatting Date/Time columns
+
+The **Start Time** and **End Time** columns should be formatted accordingly with the proper *Date/Time* mask present in the log file.
+
+```{r}
+dataset[['Start Time']] <- as.POSIXct(dataset$`Start Time`, format = "%d/%m/%Y %H:%M:%S")
+dataset[['End Time']] <- as.POSIXct(dataset$`End Time`, format = "%d/%m/%Y %H:%M:%S")
+```
+
+## Viewing the Dataset
+
+```{r}
+dataset
+```
+
+\newpage
+
+## Filtering Only First Event of Each Case/Instance
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=65)}
+#This is needed to compute the arrival time between instances/cases
+filtered <- dataset[!duplicated(dataset$`Case ID`),] 
+filtered
+```
+
+## Ordering by Start Date/Time
+
+```{r}
+ordered <- filtered[order(as.POSIXct(filtered$`Start Time`), decreasing = FALSE),]
+ordered
+```
+
+\newpage
+
+## Computing Arrival Interval Between Cases/Instances
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=65)}
+ordered <- data.table(ordered)
+instances <- ordered[, Interval := difftime(as.POSIXct(ordered$`Start Time`), shift(as.POSIXct(ordered$`Start Time`), fill=ordered$`Start Time`[1L]), units="mins")]
+instances <- instances[-c(1),]
+summary(as.numeric(instances$Interval))
+sd(as.numeric(instances$Interval)) #Standard Deviation
+var(as.numeric(instances$Interval)) #Variance
+instances
+```
+
+## Computing Activities Elapsed Time
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=65)}
+dataset[['Elapsed Time']] <- as.difftime(difftime(dataset[['End Time']], dataset[['Start Time']], units="mins"))
+model <- dataset
+datasetActivities <- dataset
+#datasetActivities[,-c(1)][datasetActivities[,-c(1)]==0] <- NA
+datasetActivities <- datasetActivities[complete.cases(datasetActivities),]
+datasetActivities #[,c(1:6,7)] #Note: Viewing only some columns with changed order
+summary(as.numeric(datasetActivities$`Elapsed Time`))
+sd(as.numeric(datasetActivities$`Elapsed Time`)) #Standard Deviation
+var(as.numeric(datasetActivities$`Elapsed Time`)) #Variance
+
+```
+
+## Computing Maximum and Minimum Hours of Work for Roles
+
+```{r}
+datasetTemp <- dataset
+datasetTemp[['Start Hours']] <- as.POSIXct(strftime(datasetTemp$`Start Time`, format="%H:%M:%S"), format = "%H:%M:%S")
+datasetTemp[['End Hours']] <- as.POSIXct(strftime(datasetTemp$`End Time`, format="%H:%M:%S"), format = "%H:%M:%S")
+
+labourHours <- datasetTemp %>%
+  group_by(Role) %>%
+  summarise(
+    "Minimum Hour" = min(`Start Hours`, na.rm = T),
+    "Maximum Hour" = max(`End Hours`, na.rm = T)
+  ) %>%
+  arrange(Role)
+
+labourHours[['Min. Hour']] <- format(labourHours$`Minimum Hour`, "%H:%M:%S")
+labourHours[['Max. Hour']] <- format(labourHours$`Maximum Hour`, "%H:%M:%S")
+labourHours[,-c(2,3)]
+
+#par(mfrow=c(1,2))
+proportion <- table(dataset$Role)/nrow(dataset)
+
+boxplot(datasetTemp$`Start Time` ~ datasetTemp$Role, width=proportion, ylab="", xlab="Roles", las=1, cex.axis = 0.5) 
+vioplot(as.numeric(datasetTemp$`Start Time`) ~ datasetTemp$Role, ylab="", xlab="Roles", las=1, cex.axis = 0.5, col = palette[2], horizontal = FALSE)
+
+boxplot(datasetTemp$`End Time` ~ datasetTemp$Role, width=proportion, ylab="", xlab="Roles", las=1, cex.axis = 0.5)
+vioplot(as.numeric(datasetTemp$`End Time`) ~ datasetTemp$Role, ylab="", xlab="Roles", las=1, cex.axis = 0.5, col = palette[2], horizontal = FALSE)
+
+```
+
+\newpage
+
+# Dataset Evaluation
+
+## Instances Arrival Interval
+
+### Statistics
+
+```{r}
+instances.interval <- as.numeric(instances$Interval)
+summary(instances.interval)
+sd(instances.interval) # Standard Deviation
+var(instances.interval) # Variance
+```
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=65)}
+par(mfrow=c(2,2)) #Set a 2x2 matrix to plot 4 charts
+hist(instances.interval, breaks = 20, main = "Histogram - Interval", xlab = "Interval")
+hist(instances.interval, main = "Histogram - Interval (Zoom In)", breaks = 300, xlim = c(0,100), xlab = "Interval")
+boxplot(instances.interval)
+boxplot(instances.interval, ylim = c(0, 20)) #This is a scale reduced boxplot
+```
+
+\newpage
+
+### Assess Distribution
+
+```{r}
+descdist(instances.interval, discrete = FALSE )
+```
+
+\newpage
+
+### Fit/Compare the Distribution
+
+```{r}
+# Distributions from "stats" package: norm,lnorm,exp,pois,cauchy,gamma,logis,nbinom,
+# geom, beta,weibull
+# Distributions from "actuar" package: invgamma,llogis,invweibull,pareto1,pareto
+
+instances.interval.scaled <- as.numeric(instances.interval)
+summary(instances.interval.scaled)
+
+instances.interval.scaled <- instances.interval.scaled[instances.interval.scaled > 0]                                     
+
+distribution <- fitdist(instances.interval.scaled, "gamma", "mge")
+plot(distribution)
+
+shape <- distribution$estimate[1]
+rate <- distribution$estimate[2]
+shape/rate #Mean
+sqrt(shape)/rate # Std.
+(sqrt(shape)/rate)^2 # Var.
+
+
+summary(instances.interval.scaled)
+sd(instances.interval.scaled)
+var(instances.interval.scaled)
+
+distribution <- fitdist(instances.interval.scaled, "exp")
+distribution$estimate
+
+
+distribution <- fitdist(instances.interval.scaled, "lnorm", method = "mge")
+plot(distribution)
+
+distribution <- fitdist(instances.interval.scaled, "weibull", "mge")
+plot(distribution)
+
+#distribution <- fitdist(instances.interval.scaled, distr = "lnorm", method = "mle", lower = c(0, 0))
+
+
+
+#gamma_variance <- 
+```
+
+\newpage
+
+## Activities Elapsed Time
+
+### Statistics
+
+```{r tidy=TRUE, tidy.opts=list(width.cutoff=70)}
+activities.duration <- st(dataset, group = "Activity", vars=c("Elapsed Time"), group.long= TRUE, out = "return")
+activities.duration
+```
+
+\newpage
+
+### Assess Distributions
+
+```{r}
+activities <- unique(dataset$Activity) # Get distinct activities names
+activitiesDF <- as.data.frame(unique(dataset$Activity))
+activitiesDF$id = 1:nrow(activitiesDF)
+
+```
+
+```{r echo=FALSE, eval=FALSE}
+for(i in 1:length(activities)) {
+    cat(i,":",activities[i],"| ")
+    if ( i %% 3 == 0 ) cat("\n")
+}
+```
+
+### Activities with Unique/Fixed Values
+
+```{r}
+uniqueActivities = data.frame(ID=character(), Activity=character(), Value=integer())
+
+for(i in 1:length(activities)) {
+  activity <- filter(dataset, Activity == activities[i])
+  if ( length(unique(activity$`Elapsed Time`)) == 1) { uniqueActivities <- rbind(uniqueActivities, data.frame(ID=i, Activity=activities[i],Value=unique(activity$`Elapsed Time`)));  
+}
+}
+  
+uniqueActivities
+```
+
+### Activities - Distribution Discovery
+
+```{r}
+
+chartFunction <- function(x) {
+
+ name <- x[1];  id <- x[2]
+ activity <- filter(dataset, Activity == name )
+ 
+ if ( length(unique(activity$`Elapsed Time`)) != 1) { descdist(as.numeric(activity$`Elapsed Time`), discrete = FALSE, graph = TRUE); 
+    cat("\n", "Activity : ",id," - ",name, "\n") } 
+}
+
+apply(activitiesDF, 1, chartFunction)
+  
+
+```
+
+\newpage
+
+### Fit/Compare the Distribution
+
+```{r echo=FALSE}
+cat("\n", "Activity - " , activities[1], "\n")
+```
+
+```{r}
+# Distributions from "stats" package: norm,lnorm,exp,pois,cauchy,gamma,logis,nbinom,
+# geom,beta,weibull
+# Distributions from "actuar" package: invgamma,llogis,invweibull,pareto1,pareto
+# The potential distribution was obtained in previous step. eg: norm, exp, etc
+# Repeat below 3 lines per each activity name/index trying a corresponding distribution
+activity <- filter(dataset, Activity == activities[1])  # Activity index 1
+distribution <- fitdist(as.numeric(activity$`Elapsed Time`), "exp")
+plot(distribution)
+```
+
+\newpage
+
+```{r echo=FALSE}
+cat("\n", "Activity - " , activities[4], "\n")
+```
+
+```{r}
+# Distributions from "stats" package: norm,lnorm,exp,pois,cauchy,gamma,logis,nbinom,
+# geom,beta,weibull
+# Distributions from "actuar" package: invgamma,llogis,invweibull,pareto1,pareto
+# The potential distribution was obtained in previous step. eg: norm, exp, etc
+# Repeat below 3 lines per each activity name/index trying a corresponding distribution
+activity <- filter(dataset, Activity == activities[4]) # Activity index 4
+distribution <- fitdist(as.numeric(activity$`Elapsed Time`), "norm")
+plot(distribution)
+```
+
+\newpage
+
+
+## Viewing the Process Model
+
+```{r}
+include.in.render <- TRUE # Change this to FALSE to export to pdf (Knit to Pdf)
+events <- model %>% #a data.frame with the information in the table above
+    mutate(Status = "complete",
+           Activity_Instance = 1:nrow(.)) %>%
+    eventlog(
+        case_id = "Case ID",
+        activity_id = "Activity",
+        activity_instance_id = "Activity_Instance",
+        lifecycle_id = "Status",
+        timestamp = "Start Time",
+        resource_id = "Resource"
+    )
+```
+
+```{r, eval=include.in.render, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=70)}
+events %>% process_map(type = frequency("relative"), layout = layout_pm(fixed_positions = TRUE))
+```
+
+```{r, eval=include.in.render, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=70)}
+events %>% process_map(performance(mean, "hours"))
+```
+
+```{r, eval=include.in.render, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=70)}
+events %>%  precedence_matrix(type = "absolute")
+```
+
+```{r, eval=include.in.render, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=70), fig.width=7}
+events %>%  precedence_matrix(type = "absolute") %>% plot
+```
+
+```{r, eval=include.in.render, echo=TRUE, tidy=TRUE, tidy.opts=list(width.cutoff=70)}
+#events %>% resource_map()
+animate_process(events, mode = "relative", jitter = 10, legend = "color",
+                mapping = token_aes(size = token_scale(3), color = token_scale("Credit Request Cases/Instances", scale = "ordinal", 
+                range = RColorBrewer::brewer.pal(12, "Paired"))))
+
+```
