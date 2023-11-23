@@ -13,5 +13,7 @@ Imports:
     ggplot2,
     grDevices,
     gridExtra,
+    insight,
     moments,
+    parallel,
     stats
