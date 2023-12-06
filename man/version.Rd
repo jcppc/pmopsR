@@ -2,10 +2,10 @@
 % Please edit documentation in R/version.R
 \name{version}
 \alias{version}
-\title{Prints the package version}
+\title{Print the package version and authoring details}
 \usage{
 version()
 }
 \description{
-Prints the package version
+Print the package version and authoring details
 }

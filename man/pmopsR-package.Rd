@@ -4,12 +4,25 @@
 \name{pmopsR-package}
 \alias{pmopsR}
 \alias{pmopsR-package}
-\title{pmopsR: R package to support multiple functions for process analysis, mining, simulation and prediction tasks}
+\title{pmopsR: Help business analysts to improve the outcomes of their daily process research practices}
 \description{
-What the package does (one paragraph).
+Collection of functions for process analysis, mining, simulation and prediction tasks.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/jcppc/pmopsR}
+  \item Report bugs at \url{https://github.com/jcppc/pmopsR/issues}
+}
+
 }
 \author{
-\strong{Maintainer}: First Last \email{first.last@example.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
+\strong{Maintainer}: João Caldeira \email{jcppc@iscte-iul.pt} (\href{https://orcid.org/0000-0003-0960-0179}{ORCID})
+
+Authors:
+\itemize{
+  \item Bárbara Santos \email{Barbara_Santos@iscte-iul.pt} (\href{https://orcid.org/0000-0003-0960-0170}{ORCID})
+}
 
 }
 \keyword{internal}
